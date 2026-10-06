@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caixinha de Segredo</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --gold: #ffe08a;
+    --gold-strong: #ffcf4d;
+    --glass: rgba(255, 255, 255, 0.10);
+    --glass-border: rgba(255, 255, 255, 0.22);
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    color: #fff;
+    overflow: hidden;
+    background: #050b1a;
+    position: relative;
+  }
+
+  /* ---------- FUNDO ANIMADO EM CAMADAS ---------- */
+  .bg-gradient {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      -45deg,
+      #050b1a,
+      #0d2a5e,
+      #3a1a5e,
+      #065f6b,
+      #050b1a
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 18s ease infinite;
+    z-index: -3;
+  }
+
+  @keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Brilho radial suave que pulsa */
+  .bg-glow {
+    position: fixed;
+    inset: -20%;
+    background: radial-gradient(
+      circle at 30% 30%,
+      rgba(90, 160, 255, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      rgba(180, 90, 255, 0.16),
+      transparent 55%
+    );
+    animation: glowPulse 10s ease-in-out infinite alternate;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  @keyframes glowPulse {
+    0%   { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 1;   transform: scale(1.08); }
+  }
+
+  /* Canvas de partículas */
+  #particles {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ---------- APP ---------- */
+  .app {
+    width: min(92%, 440px);
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .titulo {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #ffffff, #cfe4ff 60%, #ffe08a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.35));
+  }
+
+  .subtitulo {
+    opacity: 0.82;
+    margin-bottom: 26px;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ---------- CAIXA (glassmorphism) ---------- */
+  .caixa {
+    padding: 30px 22px;
+    border-radius: 30px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    box-shadow:
+      0 24px 60px rgba(0, 0, 0, 0.45),
+      inset 0 1px 1px rgba(255, 255, 255, 0.22),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Linha de brilho superior */
+  .caixa::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.6),
+      transparent
+    );
+  }
+
+  .icone {
+    font-size: 60px;
+    margin-bottom: 8px;
+    display: inline-block;
+    animation: floatIcon 4s ease-in-out infinite;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35));
+  }
+
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+  }
+
+  /* ---------- TELA DA MENSAGEM ---------- */
+  .tela {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 26px 20px;
+    margin: 16px 0 22px;
+    border-radius: 20px;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(90, 140, 255, 0.10), transparent 70%),
+      rgba(4, 10, 26, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      inset 0 0 30px rgba(0, 0, 0, 0.55),
+      0 10px 24px rgba(0, 0, 0, 0.20);
+    position: relative;
+  }
+
+  .frase {
+    font-size: 20px;
+    line-height: 1.6;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+  }
+
+  .referencia {
+    display: block;
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    opacity: 0.95;
+  }
+
+  /* ---------- BOTÃO ---------- */
+  button {
+    width: 100%;
+    border: none;
+    padding: 17px;
+    border-radius: 16px;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    color: #15203b;
+    background: linear-gradient(135deg, var(--gold), #ffffff 70%, #ffeeb8);
+    box-shadow:
+      0 10px 24px rgba(255, 207, 77, 0.22),
+      0 6px 18px rgba(0, 0, 0, 0.30);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 80%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent,
+      rgba(255, 255, 255, 0.75),
+      transparent
+    );
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 16px 34px rgba(255, 207, 77, 0.30),
+      0 10px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  button:hover::after {
+    left: 130%;
+  }
+
+  button:active {
+    transform: scale(0.97);
+  }
+
+  .contador {
+    margin-top: 18px;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    opacity: 0.65;
+  }
+
+  .assinatura {
+    margin-top: 22px;
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  /* ---------- ANIMAÇÃO DE ENTRADA DA FRASE ---------- */
+  .entrando {
+    animation: aparecer 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes aparecer {
+    from {
+      opacity: 0;
+      transform: translateY(14px) scale(0.97);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+  }
+
+  /* Brilho pulsante ao redor da caixa ao abrir */
+  .pulse {
+    animation: boxPulse 0.8s ease;
+  }
+
+  @keyframes boxPulse {
+    0%   { box-shadow: 0 24px 60px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.22); }
+    50%  { box-shadow: 0 24px 70px rgba(120,170,255,0.55), inset 0 1px 1px rgba(255,255,255,0.3); }
+    100% { box-shadow: 0 24px 60px rgba(0,0,0,0.45), inset 0 1px 1px rgba(255,255,255,0.22); }
+  }
+
+  @media (max-width: 380px) {
+    .titulo { font-size: 26px; }
+    .frase { font-size: 18px; }
+    .icone { font-size: 52px; }
+  }
+</style>
+</head>
+
+<body>
+
+  <!-- Fundo animado em camadas -->
+  <div class="bg-gradient"></div>
+  <div class="bg-glow"></div>
+  <canvas id="particles"></canvas>
+
+  <main class="app">
+
+    <h1 class="titulo">🔐 Caixinha de Segredo</h1>
+
+    <p class="subtitulo">
+      Abra a caixinha e receba uma mensagem da Palavra de Deus.
+    </p>
+
+    <section class="caixa" id="caixa">
+
+      <div class="icone">📖</div>
+
+      <div class="tela">
+        <div id="mensagem">
+          <div class="frase">
+            Clique no botão para abrir<br>
+            seu segredo bíblico.
+          </div>
+        </div>
+      </div>
+
+      <button onclick="abrirSegredo()">
+        ✨ Abrir meu segredo
+      </button>
+
+      <div class="contador">
+        Mensagens disponíveis: <span id="contador">20</span>
+      </div>
+
+    </section>
+
+    <div class="assinatura">
+      “A tua palavra é lâmpada para os meus pés.”
+    </div>
+
+  </main>
+
+<script>
+  /* ---------- FRASES ---------- */
+  const frases = [
+    { texto: "O Senhor é o meu pastor; nada me faltará.", ref: "Salmos 23:1" },
+    { texto: "Tudo posso naquele que me fortalece.", ref: "Filipenses 4:13" },
+    { texto: "Não temas, porque eu sou contigo.", ref: "Isaías 41:10" },
+    { texto: "Entrega o teu caminho ao Senhor; confia nele.", ref: "Salmos 37:5" },
+    { texto: "O Senhor é a minha luz e a minha salvação.", ref: "Salmos 27:1" },
+    { texto: "Buscai primeiro o Reino de Deus e a sua justiça.", ref: "Mateus 6:33" },
+    { texto: "A minha graça te basta.", ref: "2 Coríntios 12:9" },
+    { texto: "Confia no Senhor de todo o teu coração.", ref: "Provérbios 3:5" },
+    { texto: "Eu estarei contigo por onde quer que andares.", ref: "Josué 1:9" },
+    { texto: "O amor nunca falha.", ref: "1 Coríntios 13:8" },
+    { texto: "Lança sobre o Senhor toda a tua ansiedade.", ref: "1 Pedro 5:7" },
+    { texto: "Deus é o nosso refúgio e fortaleza.", ref: "Salmos 46:1" },
+    { texto: "Alegrai-vos sempre no Senhor.", ref: "Filipenses 4:4" },
+    { texto: "Em paz me deito e logo adormeço.", ref: "Salmos 4:8" },
+    { texto: "O Senhor pelejará por vós.", ref: "Êxodo 14:14" },
+    { texto: "Seja forte e corajoso. Não tenha medo.", ref: "Josué 1:9" },
+    { texto: "Pedi, e dar-se-vos-á; buscai, e encontrareis.", ref: "Mateus 7:7" },
+    { texto: "Aquele que habita no esconderijo do Altíssimo descansará.", ref: "Salmos 91:1" },
+    { texto: "O Senhor está perto dos que têm o coração quebrantado.", ref: "Salmos 34:18" },
+    { texto: "Grandes coisas fez o Senhor por nós.", ref: "Salmos 126:3" }
+  ];
+
+  let restantes = [...frases];
+
+  function abrirSegredo() {
+    if (restantes.length === 0) {
+      restantes = [...frases];
+    }
+
+    const indice = Math.floor(Math.random() * restantes.length);
+    const segredo = restantes.splice(indice, 1)[0];
+
+    const mensagem = document.getElementById("mensagem");
+    mensagem.classList.remove("entrando");
+    void mensagem.offsetWidth;
+
+    mensagem.innerHTML = `
+      <div class="frase entrando">
+        “${segredo.texto}”
+        <span class="referencia">${segredo.ref}</span>
+      </div>
+    `;
+
+    document.getElementById("contador").textContent = restantes.length;
+
+    // Pulso visual na caixa
+    const caixa = document.getElementById("caixa");
+    caixa.classList.remove("pulse");
+    void caixa.offsetWidth;
+    caixa.classList.add("pulse");
+  }
+
+  /* ---------- PARTÍCULAS ---------- */
+  const canvas = document.getElementById("particles");
+  const ctx = canvas.getContext("2d");
+  let particles = [];
+  let w, h;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+
+  function createParticles() {
+    const count = Math.min(90, Math.floor((w * h) / 18000));
+    particles = [];
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.8 + 0.4,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        alpha: Math.random() * 0.5 + 0.15,
+        pulse: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function drawParticles() {
+    ctx.clearRect(0, 0, w, h);
+
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.pulse += 0.015;
+
+      if (p.x < -10) p.x = w + 10;
+      if (p.x > w + 10) p.x = -10;
+      if (p.y < -10) p.y = h + 10;
+      if (p.y > h + 10) p.y = -10;
+
+      const a = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(180, 215, 255, ${a})`;
+      ctx.shadowColor = "rgba(140, 190, 255, 0.9)";
+      ctx.shadowBlur = 8;
+      ctx.fill();
+    }
+
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(drawParticles);
+  }
+
+  window.addEventListener("resize", () => {
+    resize();
+    createParticles();
+  });
+
+  resize();
+  createParticles();
+  drawParticles();
+</script>
+
+</body>
+</html>
